@@ -1,0 +1,44 @@
+// Tudor Maria-Elena 334CC
+
+Tema 2 APD Protocolul BitTorrent
+
+In implementarea temei am lasat comentarii in cod citate din documentul primit
+cu enuntul temei pentru a demonstra faptul ca am respectat pasii prezentati
+acolo.
+
+1. Clientii
+Se respecta pasii prezentati; in primul rand, la initializare citeste datele din
+fisier si le salveaza in files_owned, contorizand cu files_owned_count. Toate
+aceste date sunt trimite mai departe la tracker.
+La download, la prima cerere  de descarcare a unui fisier, clientul va primi si
+hash-urile segmentelor pentru a le putea compara mai tarziu cu hash-ul primit de
+la seeds/peers. O data la 10 descarcari de segmente, clientul va trimite o cerere
+de actualizare a swarm-ului doar (nu va mai fi nevoie ca tracker-ul sa-i trimita
+din nou hash-urile segmentelor). Se folosesc cele doua variabile globale
+files_requested_completed si files_requested_count pentru a tine evidenta fisierelor
+descarcate si a stii cand clientul nu mai are nevoie de alte fisiere si se poate
+inchide. Structura file_info foloseste campul chunks_recv_from pentru
+a tine evidenta ownerilor de la care a primit segmentele respective. Acest camp
+il folosesc doar pentru files_requested, la files_owned nu este nevoie de el.
+La upload, peer-ul va primi hash-ul segmentelor, va verifica daca le detine si va
+trimite un simplu mesaj "ACK" intrucat nu se lucreaza cu fisiere propriu-zise.
+2. Tracker-ul
+La initializare, primeste date de la toti clientii si le adauga in tracker_database,
+care contine lista de fisiere si a swarm-urilor lor. La cererile de download si/sau
+de actualizare, trimite swarm-ul corespunzator si hash-urile segmentelor (pentru
+primul caz). El gestioneaza si mesajele de finalizare a descarcarilor, in functie de caz.
+Prin vectorul clients_ready tine evidenta clientilor care si-au terminat treaba si
+raman doar in swarm. Atunci cand toti sunt gata, se opreste si executia programului.
+3. Structuri
+In afara de file_info, toate celelalte structuri sunt facute dupa cum au fost descrise
+in enunt. file_info este o structura care contine informatii despre un fisier, cum ar
+fi numele, cate segmente detine, vectorul de segmente si un vector de owneri pentru
+fiecare segment.
+3. Eficienta
+Pentru a varia alegerea unui seed/peer pentru un anumit segment am folosit un
+algoritm in care incearca de cateva ori prin numere random sa gaseasca un potential
+owner care nu a mai fost folosit pana atunci pentru acel segment. Daca nu reuseste
+dupa cateva incercari, atunci este ales primul client din swarm. Toate segmentele
+se descarca in ordine asa ca in conditiile in care primeste un "NACK" de la un peer,
+se va incerca inca o data descarcarea de la owner-ul default.
+
